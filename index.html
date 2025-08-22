@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Suara MultiPlayer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      background: linear-gradient(rgba(1, 68, 33, 0.85), rgba(1, 68, 33, 0.85)),
+        url('poker-table-background.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      padding: 20px;
+      color: white;
+    }
+    h1 { margin-bottom: 10px; }
+    p { font-size: 18px; }
+    select, button, input {
+      font-size: 16px;
+      padding: 10px;
+      margin: 10px;
+      border: none;
+      border-radius: 12px;
+      background-color: #0088cc;
+      color: white;
+      cursor: pointer;
+    }
+    .player-zone { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 30px; }
+    .player-area {
+      background-color: rgba(255,255,255,0.8);
+      border-radius: 12px;
+      padding: 10px;
+      margin: 10px;
+      width: 180px;
+      color: #000;
+    }
+    .card {
+      display: inline-block;
+      margin: 5px;
+      width: 60px;
+      height: 90px;
+      background-size: cover;
+      background-position: center;
+      border-radius: 8px;
+    }
+    .reaction-row button {
+      font-size: 20px;
+      margin: 4px;
+      padding: 4px 8px;
+      border-radius: 8px;
+    }
+    @keyframes fadeOut {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.5); }
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 Suara — Игра с друзьями</h1>
+  <p>Выберите количество игроков (до 6) и ставку:</p>
+  <select id="playerCount">
+    <option value="1">1 игрок</option>
+    <option value="2">2 игрока</option>
+    <option value="3">3 игрока</option>
+    <option value="4">4 игрока</option>
+    <option value="5">5 игроков</option>
+    <option value="6">6 игроков</option>
+  </select>
+  <input type="number" id="betAmount" placeholder="Ставка" min="1" value="10" />
+  <button onclick="initNewGame()">🆕 Новый стол</button>
+  <button onclick="initGame()">▶️ Продолжить игру</button>
+
+  <div class="player-zone" id="playerZone"></div>
+  <div id="status">Ход не начат</div>
+
+  <script>
+    let players = [];
+    let deck = [];
+
+    function initDeck() {
+      const suits = ['spades', 'hearts', 'diamonds', 'clubs'];
+      const ranks = ['2','3','4','5','6','7','8','9','10','jack','queen','king','ace'];
+      deck = [];
+      for (const suit of suits) {
+        for (const rank of ranks) {
+          deck.push({ suit, rank });
+        }
+      }
+      deck.sort(() => Math.random() - 0.5);
+    }
+
+    function calculateScore(cards) {
+      const values = {'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'jack':10,'queen':10,'king':10,'ace':11};
+      const suitMap = {};
+      cards.forEach(c => {
+        if (!suitMap[c.suit]) suitMap[c.suit] = 0;
+        suitMap[c.suit] += values[c.rank];
+      });
+      const suitCounts = Object.entries(suitMap);
+      if (suitCounts.length === cards.length) {
+        return Math.max(...cards.map(c => values[c.rank]));
+      }
+      return Math.max(...suitCounts.map(([_, v]) => v));
+    }
+
+    function initNewGame() {
+      players = [];
+      initGame(true);
+    }
+
+    function initGame(forceNew = false) {
+      const count = parseInt(document.getElementById("playerCount").value);
+      const stake = parseInt(document.getElementById("betAmount").value);
+      const zone = document.getElementById("playerZone");
+      zone.innerHTML = '';
+      const emojis = ['😊','😠','😎','👋','👍','💯'];
+      if (forceNew) {
+        for (let i = 0; i < count; i++) {
+          players.push({ name: `Игрок ${i+1}`, balance: 1000, stake: stake, cards: [], score: 0 });
+        }
+      }
+      players = players.filter(p => p.balance >= stake);
+      initDeck();
+      players.forEach(p => {
+        p.cards = [deck.pop(), deck.pop(), deck.pop()];
+        p.balance -= stake;
+        p.score = calculateScore(p.cards);
+      });
+      const max = Math.max(...players.map(p => p.score));
+      const winners = players.filter(p => p.score === max);
+      if (winners.length === 1) {
+        winners[0].balance += winners[0].stake * players.length;
+        showRoundResults(players, winners[0]);
+      } else {
+        winners.forEach(w => w.balance += w.stake);
+        showRoundResults(players, null, winners);
+      }
+      players.forEach((p, i) => {
+        const box = document.createElement('div');
+        box.className = 'player-area';
+        box.id = `player-${i}`;
+        box.innerHTML = `<div class='player-name'>${p.name}</div><div id='cards-${i}'></div><div>💰 ${p.balance} | 🧮 ${p.score}</div>`;
+        const react = document.createElement('div');
+        react.className = 'reaction-row';
+        emojis.forEach(e => {
+          const b = document.createElement('button');
+          b.textContent = e;
+          b.onclick = () => {
+            const disp = document.createElement('div');
+            disp.textContent = e;
+            disp.style.animation = 'fadeOut 2s forwards';
+            disp.style.fontSize = '28px';
+            document.getElementById(`player-${i}`).appendChild(disp);
+            setTimeout(() => disp.remove(), 2000);
+          };
+          react.appendChild(b);
+        });
+        box.appendChild(react);
+        document.getElementById('playerZone').appendChild(box);
+        p.cards.forEach(c => showCard(c, i));
+      });
+    }
+
+    function showCard(card, idx) {
+      const d = document.createElement('div');
+      d.className = 'card';
+      d.style.backgroundImage = `url('https://raw.githubusercontent.com/hayeah/playing-cards-assets/master/png/${card.rank}_of_${card.suit}.png')`;
+      document.getElementById(`cards-${idx}`).appendChild(d);
+    }
+
+    function showRoundResults(all, winner = null, ties = []) {
+      let text = '📢 Результаты раунда:\n';
+      all.forEach(p => text += `${p.name}: ${p.score} очков, баланс: ${p.balance}\n`);
+      if (winner) text += `\n🏆 Победитель: ${winner.name}`;
+      if (ties.length > 1) text += `\n🤝 Ничья между: ${ties.map(t => t.name).join(', ')}`;
+      document.getElementById('status').innerText = text;
+      if (winner) {
+        const banner = document.createElement('div');
+        banner.textContent = `🎉 Победитель: ${winner.name}!`;
+        banner.style.position = 'fixed';
+        banner.style.top = '40%';
+        banner.style.left = '50%';
+        banner.style.transform = 'translate(-50%, -50%)';
+        banner.style.padding = '20px 40px';
+        banner.style.fontSize = '32px';
+        banner.style.background = 'rgba(0, 0, 0, 0.85)';
+        banner.style.color = 'white';
+        banner.style.borderRadius = '12px';
+        banner.style.zIndex = 9999;
+        document.body.appendChild(banner);
+        setTimeout(() => banner.remove(), 4000);
+      }
+    }
+  </script>
+</body>
+</html>
