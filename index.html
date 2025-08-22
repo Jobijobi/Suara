@@ -3,22 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <title>Suara MiniApp</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    /* сохрани стили из последней версии */
+    body {
+      background: #014421;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
 </head>
 <body>
-  <h1>🚨 Ошибка исправлена</h1>
-  <p>Проверьте, что ваш браузер или окружение поддерживает Telegram.WebApp. Добавлена безопасная проверка перед использованием <code>Telegram.WebApp.sendData()</code>.</p>
-
+  <h1>Suara MiniApp</h1>
+  <p>Игра загружается...</p>
   <script>
-    // Пример безопасного использования
-    const message = "Пример данных";
-
-    if (typeof Telegram !== 'undefined' && Telegram.WebApp && typeof Telegram.WebApp.sendData === 'function') {
-      Telegram.WebApp.sendData(message);
-    } else {
-      console.log("Telegram.WebApp.sendData не поддерживается в этом окружении. Сообщение:", message);
+    // Безопасная проверка перед использованием Telegram WebApp API
+    function safeSendData(message) {
+      if (typeof Telegram !== 'undefined' && Telegram.WebApp && typeof Telegram.WebApp.sendData === 'function') {
+        Telegram.WebApp.sendData(message);
+      } else {
+        console.log("[WebApp]: Telegram WebApp API не поддерживается, сообщение:", message);
+      }
     }
+
+    // пример вызова
+    safeSendData("Пример теста безопасной отправки");
   </script>
 </body>
 </html>
