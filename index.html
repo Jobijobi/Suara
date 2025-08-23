@@ -1,144 +1,95 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>Suara MiniApp</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      background: #014421;
-      color: #fff;
-      text-align: center;
-      overflow-x: hidden;
-    }
-    .player-zone {
-      position: relative;
-      width: 100vw;
-      max-width: 600px;
-      height: 100vw;
-      max-height: 600px;
-      margin: 20px auto 10px auto;
-      border-radius: 50%;
-    }
-    .player {
-      position: absolute;
-      width: 28vw;
-      max-width: 120px;
-      background: rgba(255,255,255,0.85);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      color: black;
-      font-weight: bold;
-      font-size: 3vw;
-      padding: 4px;
-      transition: 0.3s;
-    }
-    .player.winner {
-      box-shadow: 0 0 20px 5px gold;
-      animation: winner-glow 1s infinite alternate;
-    }
-    @keyframes winner-glow {
-      from { box-shadow: 0 0 10px 2px gold; }
-      to { box-shadow: 0 0 25px 10px gold; }
-    }
-    .player .cards {
-      margin-top: 5px;
-      display: flex;
-      gap: 4px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .player .score, .player .balance, .player .bet {
-      margin-top: 4px;
-      font-size: 2.5vw;
-    }
-    .card {
-      width: 8vw;
-      max-width: 38px;
-      height: 11vw;
-      max-height: 55px;
-      background-size: cover;
-      border-radius: 4px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      opacity: 0;
-      transform: translateY(-20px);
-      animation: dealCard 0.5s forwards;
-    }
-    @keyframes dealCard {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    .deck {
-      width: 48px;
-      height: 72px;
-      margin: 10px auto;
-      background-image: url('https://raw.githubusercontent.com/hayeah/playing-cards-assets/master/png/back.png');
-      background-size: cover;
-      border-radius: 6px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.4);
-    }
-    #controls {
-      margin-top: 10px;
-    }
-    button, input[type=number] {
-      margin: 5px;
-      padding: 10px 14px;
-      border-radius: 10px;
-      border: none;
-      font-size: 1rem;
-    }
-    button {
-      background-color: #0088cc;
-      color: white;
-      cursor: pointer;
-    }
-    input[type=number] {
-      width: 60px;
-    }
-    #winner {
-      font-size: 1.1rem;
-      margin-top: 8px;
-      font-weight: bold;
-    }
-    @media screen and (max-width: 500px) {
-      button, input[type=number] {
-        font-size: 0.9rem;
-        padding: 8px 12px;
-      }
-      #controls {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-    }
-  </style>
-</head>
-<body>
-  <h1>Suara MiniApp</h1>
-  <div class="deck"></div>
-  <div class="player-zone" id="player-zone"></div>
-  <div id="controls">
-    <label>Ставка: <input type="number" id="betAmount" value="10" min="1"></label>
-    <label>Игроков: <input type="number" id="playerCount" value="6" min="2" max="8"></label>
-    <br>
-    <button onclick="startGame()">Начать игру</button>
-    <button onclick="resetGame()">🔄 Новая игра</button>
-    <button onclick="increaseBet()">➕ Увеличить ставку</button>
-    <button onclick="doubleBet()">✖️ Удвоить ставку</button>
-    <button onclick="fold()">🚫 Сдаться</button>
-    <button onclick="pass()">⏭ Пас</button>
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Свара · 3 карты</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--accent:#ffd400;--ink:#111;--muted:#666}
+*{box-sizing:border-box}html,body{margin:0;font-family:Inter,system-ui,Arial;color:#111;height:100%}
+body{background:radial-gradient(circle at center,#0d5f2f 0%,#053b1b 100%);position:relative;overflow-x:hidden}
+body::after{content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill='%23000000' fill-opacity='0.05'%3E%3Ccircle cx='1' cy='1' r='1'/%3E%3C/g%3E%3C/svg%3E");opacity:0.3;pointer-events:none}
+.wrap{max-width:980px;margin:32px auto;padding:0 16px;position:relative;z-index:1}
+header{display:flex;gap:10px;align-items:center;margin-bottom:16px}.logo{font-weight:800;font-size:24px}.badge{background:var(--accent);color:#111;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:600}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.panel,.arena{background:#fff;border:1px solid #eee;border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.06);padding:14px}
+.controls{display:flex;gap:8px;align-items:end;flex-wrap:wrap}label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+input{padding:10px 12px;border:1px solid #ddd;border-radius:12px;font-size:14px;width:100%}input[disabled]{background:#fafafa;color:#9a9a9a}
+.btn{border:0;background:#111;color:#fff;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}.btn.alt{background:var(--accent);color:#111}.btn:disabled{opacity:.6;cursor:not-allowed}
+.row{display:flex;justify-content:space-between;align-items:center}
+.subtitle{color:var(--muted);font-size:12px}
+.hand{display:flex;gap:10px}
+.card{width:110px;height:160px;perspective:800px}
+.card-inner{position:relative;width:100%;height:100%;transition:opacity .6s, transform .6s;transform-style:preserve-3d;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.2);opacity:0;transform:translateY(8px) scale(.98)}
+.card.dealt .card-inner{opacity:1;transform:translateY(0) scale(1)} /* всегда лицом вверх */
+.card-face{position:absolute;width:100%;height:100%;border-radius:14px;overflow:hidden}
+.card-front{background:#fff;display:flex;align-items:center;justify-content:center}
+.card-front::after{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,#f3f3f3 0 10px,#fff 10px 20px);opacity:0.3}
+.card-back{display:none} /* убрана рубашка */
+.card.highlight .card-front{border:4px solid var(--accent)}
+.score{font-weight:800;font-variant-numeric:tabular-nums}
+.status{display:none;margin-top:6px;padding:10px 12px;border-radius:12px;font-weight:700;text-align:center}
+.status.win{display:block;background:#e6f6ec;color:#0a9a41;border:1px solid #bfe9cd}
+.status.lose{display:block;background:#fdecec;color:#c62828;border:1px solid #f7c3c3}
+.status.tie{display:block;background:#efecff;color:#6a5acd;border:1px solid #d3ccff}
+.footer{margin-top:10px;color:#888;font-size:12px;text-align:center}
+</style></head>
+<body><div class="wrap">
+<header><div class="logo">Свара · 3 карты</div><div class="badge">36 карт · A=11, K/Q/J/10=10</div></header>
+<section class="grid">
+  <div class="panel">
+    <div class="controls">
+      <div style="flex:1;min-width:160px"><label for="balanceInput">Баланс, ₽ (задаётся при старте)</label><input id="balanceInput" type="number" min="1" placeholder="например, 1000"></div>
+      <button id="setBalanceBtn" class="btn alt">Установить</button>
+    </div>
+    <div class="controls" style="margin-top:8px">
+      <div style="flex:1;min-width:140px"><label for="betInput">Ставка, ₽</label><input id="betInput" type="number" min="10" max="100000" placeholder="минимум 10" disabled></div>
+      <button id="playBtn" class="btn" disabled>Играть</button>
+    </div>
+    <div class="row" style="margin-top:8px;gap:14px;justify-content:flex-start">
+      <div><span class="subtitle">Баланс:</span> <b id="balanceText">—</b></div>
+      <div class="subtitle">Лимиты: 10 ₽ / 100 000 ₽</div>
+    </div>
+    <p class="subtitle" style="margin:8px 0 0">Очки считаются по масти, которой большинство. Если все масти разные — только старшая карта. Победа: возврат 2× ставки; ничья: ставка возвращена; проигрыш: ставка сгорает.</p>
   </div>
-  <div id="winner"></div>
-
-  <!-- Скрипты остаются без изменений -->
-</body>
-</html>
+  <div class="arena">
+    <div class="row"><div><b>Компьютер</b></div><div class="score" id="cpuScore">0</div></div>
+    <div class="hand" id="cpuHand"></div>
+    <hr style="border:none;border-top:1px dashed #eee;margin:10px 0">
+    <div class="row"><div><b>Вы</b></div><div class="score" id="playerScore">0</div></div>
+    <div class="hand" id="playerHand"></div>
+    <div id="resultBox" class="status"></div>
+  </div>
+</section>
+<div class="footer">SVG-карты, подсвечены карты в зачёт · Fisher–Yates тасование</div>
+</div>
+<script>
+// Колода
+const RANKS=["6","7","8","9","10","J","Q","K","A"], SUITS=["♠","♥","♦","♣"], VAL={6:6,7:7,8:8,9:9,10:10,J:10,Q:10,K:10,A:11};
+const MIN=10, MAX=100000; let balance=null, busy=false;
+// DOM
+const $=id=>document.getElementById(id);
+const bi=$('balanceInput'), sb=$('setBalanceBtn'), bet=$('betInput'), play=$('playBtn'), bt=$('balanceText');
+const cpuH=$('cpuHand'), plH=$('playerHand'), cpuS=$('cpuScore'), plS=$('playerScore'), rb=$('resultBox');
+const rub=n=>n.toLocaleString('ru-RU')+" ₽";
+// utils
+function deck(){const d=[];for(const s of SUITS)for(const r of RANKS)d.push({r,s,v:VAL[r],red:(s==='♥'||s==='♦')});return d}
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const deal3=d=>[d.pop(),d.pop(),d.pop()];
+function evalHand(h){const g={};h.forEach(c=>{(g[c.s]??=[]).push(c)});const ks=Object.keys(g);let chosen;
+ if(ks.length===1)chosen=g[ks[0]]; else if(ks.length===2)chosen=Object.values(g).sort((a,b)=>b.length-a.length)[0]; else chosen=[h.reduce((m,c)=>c.v>m.v?c:m,h[0])];
+ return {score:chosen.reduce((a,c)=>a+c.v,0), chosen};}
+function cardEl(c){const col=c.red?'#c62828':'#111';const el=document.createElement('div');el.className='card';el.innerHTML=`<div class="card-inner"><div class="card-face card-front"><svg viewBox='0 0 100 140' xmlns='http://www.w3.org/2000/svg'><rect x='2' y='2' width='96' height='136' rx='10' ry='10' fill='white' stroke='#111' stroke-width='2'/><text x='10' y='22' font-size='16' font-weight='700' fill='${col}'>${c.r}</text><text x='10' y='40' font-size='18' font-weight='700' fill='${col}'>${c.s}</text><g transform='translate(50,70)' text-anchor='middle'><text y='8' font-size='42' font-weight='800' fill='${col}'>${c.s}</text></g><g transform='translate(100,140) rotate(180)'><text x='10' y='22' font-size='16' font-weight='700' fill='${col}'>${c.r}</text><text x='10' y='40' font-size='18' font-weight='700' fill='${col}'>${c.s}</text></g></svg></div></div>`;return el}
+function clearUI(){cpuH.innerHTML=plH.innerHTML='';cpuS.textContent=plS.textContent='0';rb.className='status';rb.style.display='none'}
+function dealAnim(cont,cards,chosen){cards.forEach((c,i)=>{const el=cardEl(c);if(chosen.includes(c))el.classList.add('highlight');cont.appendChild(el);setTimeout(()=>el.classList.add('dealt'),200*(i+1));})}
+function setResult(type,msg){rb.className='status '+type;rb.textContent=msg;rb.style.display='block'}
+function checkStake(){const s=+bet.value; if(!Number.isFinite(s))return[0,'Введите ставку']; if(s<MIN)return[0,'Минимальная ставка '+rub(MIN)]; if(s>MAX)return[0,'Максимальная ставка '+rub(MAX)]; if(balance==null)return[0,'Сначала задайте баланс']; if(s>balance)return[0,'Ставка превышает баланс']; return[s,'']}
+function updBal(){bt.textContent=balance==null?'—':rub(balance)}
+// events
+sb.onclick=()=>{const v=+bi.value; if(!Number.isFinite(v)||v<=0)return alert('Введите корректный баланс'); balance=Math.floor(v);updBal();bi.disabled=sb.disabled=true;bet.disabled=play.disabled=false}
+play.onclick=async()=>{if(busy)return; const [stake,msg]=checkStake(); if(!stake)return alert(msg); busy=true; play.disabled=true; clearUI(); const d=shuf(deck()); const cpu=deal3(d), pl=deal3(d);
+ const ce=evalHand(cpu), pe=evalHand(pl); dealAnim(cpuH,cpu,ce.chosen); dealAnim(plH,pl,pe.chosen); await new Promise(r=>setTimeout(r,1200)); cpuS.textContent=ce.score; plS.textContent=pe.score;
+ if(pe.score>ce.score){balance+=stake; setResult('win','Победа! +'+rub(stake)+' (возврат 2×)')} else if(pe.score<ce.score){balance-=stake; setResult('lose','Проигрыш −'+rub(stake))} else setResult('tie','Ничья — ставка возвращена');
+ updBal(); if(balance<=0){balance=0;updBal();alert('Баланс исчерпан. Обновите страницу, чтобы начать заново.'); bet.disabled=play.disabled=true}else{await new Promise(r=>setTimeout(r,200)); play.disabled=false} busy=false}
+// init
+bet.value=MIN;updBal();
+</script>
+</body></html>
